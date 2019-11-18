@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <link href='https://fonts.googleapis.com/css?family=Nova Flat' rel='stylesheet'>
+
+    <style>
+        * {
+            font-family: 'Nova Flat';
+        }
+
+        .full-width {
+          width: 95%;
+          transform: translate(2.5%, 0%);
+        }
+
+        .center-horizontal {
+          position: absolute;
+          left: 50%;
+          transform: translate(-50%, -0%);
+        }
+
+        .header {
+          text-align: center;
+          font-size: 60px;
+        }
+
+        /* Name/Legend input text boxes */
+        .input-box {
+          text-align: center;
+          font-size: 48px;
+          padding: 12px 20px;
+          margin: 8px 0;
+          box-sizing: border-box;
+          border: 2px solid black;
+        }
+
+        /* Join/Leave Buttons */
+        .button {
+          border: none;
+          color: white;
+          padding: 32px;
+          text-align: center;
+          text-decoration: none;
+          display: inline-block;
+          font-size: 64px;
+        }
+
+        /* Button colors */
+        .button-green {background-color: #4CAF50;} /* Green */
+        .button-blue {background-color: #008CBA;} /* Blue */
+        .button-red {background-color: #f44336;} /* Red */
+        .button-gray {background-color: #e7e7e7; color: black;} /* Gray */
+        .button-black {background-color: #555555;} /* Black */
+
+        /* Dropdown Button */
+        .dropbtn {
+          background-color: #3498DB;
+          color: white;
+          padding: 32px;
+          font-size: 64px;
+          border: none;
+          cursor: pointer;
+        }
+
+        /* Dropdown button on hover & focus */
+        .dropbtn:hover, .dropbtn:focus {
+          background-color: #2980B9;
+        }
+
+        /* The container <div> - needed to position the dropdown content */
+        .dropdown {
+          position: relative;
+          display: inline-block;
+        }
+
+        /* Dropdown Content (Hidden by Default) */
+        .dropdown-content {
+          display: none;
+          position: absolute;
+          background-color: #f1f1f1;
+          font-size: 36px;
+          min-width: 160px;
+          box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+          z-index: 1;
+        }
+
+        /* Links inside the dropdown */
+        .dropdown-content a {
+          color: black;
+          padding: 12px 0px;
+          text-decoration: none;
+          display: block;
+        }
+
+        /* Change color of dropdown links on hover */
+        .dropdown-content a:hover {background-color: #ddd}
+        .selected {background-color: #ddd}
+
+        /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+        .show {display:block;}
+
+    </style>
+
+    <script>
+        let account = ''
+
+        function elem(id) { return document.getElementById(id); }
+        function getValue(id) { return elem(id).value; }
+        function setValue(id, value) { elem(id).value = value; }
+        function setStyle(id, key, value) { elem(id).style[key] = value; }
+        function setBackgroundColor(id, value) { setStyle(id, "backgroundColor", value); }
+
+        function toggleAccounts() {
+            let e = elem('accountsDropdown');
+            if (e.classList.contains('show')) {
+                 e.classList.remove('show');
+            }
+            else {
+                e.classList.add('show');
+            }
+        }
+
+        function readCookies() {
+            let data = document.cookie.split(',');
+            if (data.length > 0) setValue('name', data[0]);
+            if (data.length > 1) setValue('legend', data[1]);
+            if (data.length > 2) account = data[2];
+        }
+
+        function writeCookies() {
+            document.cookie = getValue('name') + "," + getValue('legend') + "," + account;
+        }
+
+        function doRequest(method, url, data) {
+            // TODO: Set class not style
+            let good = "white";
+            let bad = "#ff9999";
+
+            fetch(url, {method: method, args: data})
+            .then(res => {
+                setBackgroundColor('name', (res.status == 401 || res.status == 403 || res.status == 405) ? bad : good);
+                setBackgroundColor('legend', (res.status == 402 || res.status == 403) ? bad: good);
+                writeCookies();
+            });
+        }
+
+        function addPlayer(name, legend) { doRequest("POST", "/?name=" + name + "&legend=" + legend); }
+        function removePlayer(name) { doRequest("DELETE", "/?name=" + name); }
+        function setAccount(name, acc) { doRequest("UPDATE", "/?name=" + name + "&account=" + acc); }
+        function setGlobalAccount(acc) {
+            account = acc;
+            for (e of document.getElementsByTagName('a')) {
+                e.classList.remove('selected');
+            }
+            let accountElement = elem(account);
+            if (accountElement)
+                accountElement.classList.add('selected');
+        }
+
+        /*
+        document.addEventListener('keydown', function(event) {
+            if(event.keyCode == 67) { // c
+                setAccount(getValue('name'), account);
+            }
+            else if(event.keyCode == 74) { // j
+                addPlayer(getValue('name'), getValue('legend'));
+            }
+            else if(event.keyCode == 76) { // l
+                removePlayer(getValue('name'));
+            }
+        });
+        */
+
+    </script>
+
+    <title>Brawlhalla Scores</title>
+
+</head>
+
+<body onload="readCookies(); setGlobalAccount(account);">
+
+    <div class="center-horizontal full-width">
+
+        <h1 class="header full-width">Brawlhalla Scores</h1>
+
+        <input id="name" placeholder="Name" class="input-box full-width">
+
+        <br><br>
+
+        <input id="legend" placeholder="Legend" class="input-box full-width">
+
+        <br><br><br><br>
+
+        <button onclick="addPlayer(getValue('name'), getValue('legend'));"
+         class="button button-green full-width">Join</button>
+
+        <button onclick="removePlayer(getValue('name'));"
+         class="button button-gray full-width">Leave</button>
+
+        <br><br><br><br>
+
+        <div class="dropdown full-width">
+            <button onclick="toggleAccounts();" class="dropbtn" style="width: 100%">Accounts</button>
+            <div id="accountsDropdown" class="dropdown-content" style="width: 100%">
+                {% for account in accounts %}
+                <a href="#" id="{{ account }}"
+                   onclick="setGlobalAccount('{{ account }}'); setAccount(getValue('name'), '{{ account }}');"
+                   style="width: 100%">{{ account }}</a>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
